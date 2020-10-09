@@ -6,6 +6,8 @@
 #include <vector>
 #include <iomanip>
 #include "Data.h"
+#include "Assembler.h"
+
 using namespace std;
 
 /*
@@ -14,35 +16,34 @@ using namespace std;
                  
 */
 
+struct label_info{
+	string name;
+	long address; 
+};
+
 class Memory
 {
 	public:
 		Memory();
-		/* Get memory by address */
-		string get(int start_addr); 
-		/* Set memory by address */
-		bool set(string value, int size, int start_addr, string type);
-		/* 
-			Display a segment of memory on the screen with the following format:
-			addr     value
-			2048     mov $1, %eax 
-			2044     add $1, %eax
-			...		 ...
-		*/
-		void display(string type);
-		int get_start_addr_of_Text();
-		~Memory();
-	private:
-		/*
-		   data = <value, size>
-		*/
+		
+		string get_value_by_addr(long start_addr); 	
+		Data get_data_by_addr(long start_addr);
+		long get_address_by_label(string name);
+		bool set(string value, int size, long start_addr, string type, string info);
+		bool update(string value, int size, long start_addr, string type);
+		void display(string type, long start, long end, long current);
+		int load_program(Assembler compiler);
+
 		vector<Data> storage; 
-		/* Create memory-layout for programs */
-		int start_addr_of_stack = 2048;
-		int start_addr_of_heap  = 1000;
-		int start_addr_of_BSS   = 800;
-		int start_addr_of_Data  = 700;
-		int start_addr_of_Text  = 500;
+		vector<label_info> labels;
+		
+		long start_addr_of_stack = 2048;
+		long start_addr_of_heap  = 1000;
+		long start_addr_of_BSS   = 800;
+		long start_addr_of_Data  = 700;
+		long start_addr_of_Text  = 500;
+		
+		~Memory();
 };
 
 #endif

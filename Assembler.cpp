@@ -97,10 +97,10 @@ void Assembler::function_handler(string* source, int loc, int max_len){
 	
 	// 4.  we need to modify "RSP" at the prologue if this function is not a leaf function and has local variables
 	if(f1.is_leaf_function == false && f1.variables.size() > 0){
-		int last_offset = f1.variables.back().addr_offset;
+		int last_offset = 0 - f1.variables.back().addr_offset;
 		// if last_offset is not divisible by 16, then do 16 bytes address alignment : multiples of 16
 		if(last_offset % 16 != 0){
-			last_offset = -ceil((float)last_offset/-16) * 16;
+			last_offset = ceil((float)last_offset/16) * 16;
 		} 
 		f1.assembly_instructions.insert(f1.assembly_instructions.begin() + 3, "subq $" + to_string(last_offset) + ",%rsp");
 	}
@@ -180,7 +180,7 @@ Compare_statment Assembler::compare_statement_parser(string source){
 string Assembler::compare_statement_handler(string source, Function &f1){
 	Compare_statment c1 = compare_statement_parser(source);
 	
-	string source1, source2, dest1 = "eax", dest2 = "eax";
+	string source1, source2, dest1 = "%eax", dest2 = "eax";
 	// 1. mov operand1 to eax
 	int operand1_offset = get_offset_by_variable_name(c1.operand1, f1.variables);
 	if(operand1_offset == -1){ // operand 1 is a constant
@@ -197,7 +197,7 @@ string Assembler::compare_statement_handler(string source, Function &f1){
 	}else{ 
 		source2 = to_string(operand2_offset)+"(%rbp)";
 	}
-	f1.assembly_instructions.push_back("cmpl " + source2 + "," + dest2);
+	f1.assembly_instructions.push_back("cmpl " + source2 + ",%" + dest2);
 	
 	string label_for_false = ".L" + to_string(label_index);
 	label_index++;
@@ -471,7 +471,7 @@ void Assembler::function_call_handler(string* source, int loc, Function &f1){
 				if(var.type == "int"){
 					f1.assembly_instructions.push_back(add_mov_insturction(to_string(var.addr_offset)+"(%rbp)", "%eax", 32));
 				}else if(var.type == "int[]"){
-					f1.assembly_instructions.push_back("lea " + to_string(var.addr_offset)+"(%rbp), %rax");
+					f1.assembly_instructions.push_back("lea " + to_string(var.addr_offset)+"(%rbp),%rax");
 				}
 				f1.assembly_instructions.push_back("pushq %rax");	
 			}
@@ -486,7 +486,7 @@ void Assembler::function_call_handler(string* source, int loc, Function &f1){
 					f1.assembly_instructions.push_back(add_mov_insturction(to_string(var.addr_offset)+"(%rbp)", "%" + register_for_argument_32[argument_to_register_index], 32));
 				}else if(var.type == "int[]"){
 					// this argument is a 64 bits variable
-					f1.assembly_instructions.push_back(add_mov_insturction(to_string(var.addr_offset)+"(%rbp)", "%" + register_for_argument_64[argument_to_register_index], 64));			
+					f1.assembly_instructions.push_back("leaq " + to_string(var.addr_offset) + "(%rbp),%" + register_for_argument_64[argument_to_register_index]);			
 				}		
 			} 
 		}
